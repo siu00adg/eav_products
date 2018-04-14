@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180414130254) do
+ActiveRecord::Schema.define(version: 20180414140357) do
 
   create_table "option_types", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
@@ -38,6 +38,15 @@ ActiveRecord::Schema.define(version: 20180414130254) do
     t.integer "type_value_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["option_id", "product_id", "type_value_id"], name: "index_values_on_option_id_and_product_id_and_type_value_id"
+  end
+
+  create_table "varchar_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "option_id"
+    t.string "value"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["option_id"], name: "index_varchar_values_on_option_id"
   end
 
 end

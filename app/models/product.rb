@@ -10,7 +10,8 @@ end
 
 def get_data(option)
   value = option.values.where(:product => self).first
-  value ? value.type_value_id : nil
+  value ? value.get_value : nil
+  #value ? value.type_value_id : nil
 end
 
 def set_data_by_name(option_name, value)

@@ -7,5 +7,6 @@ class CreateValues < ActiveRecord::Migration[5.1]
 
       t.timestamps
     end
+    add_index("values", ["option_id", "product_id", "type_value_id"])
   end
 end

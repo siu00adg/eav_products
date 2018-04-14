@@ -3,7 +3,7 @@ class AddOptionTypesAndOptionsData < ActiveRecord::Migration[5.1]
     reversible do |dir|
       dir.up do
         option_type = OptionType.create(:name => 'varchar')
-        Option.create(:name => 'name', :option_type => option_type)
+        Option.create(:name => 'description', :option_type => option_type)
         option_type = OptionType.create(:name => 'integer')
         Option.create(:name => 'position', :option_type => option_type)
         option_type = OptionType.create(:name => 'decimal')
