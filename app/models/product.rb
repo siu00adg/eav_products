@@ -1,7 +1,7 @@
 class Product < ApplicationRecord
   has_many :values
   has_many :options, :through => :values
-
+  has_and_belongs_to_many :categories
 
 def get_data_by_name(option_name)
   option = Option.find_by_name(option_name)
