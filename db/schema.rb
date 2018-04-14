@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180414140357) do
+ActiveRecord::Schema.define(version: 20180414164637) do
 
   create_table "option_types", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
@@ -26,10 +26,24 @@ ActiveRecord::Schema.define(version: 20180414140357) do
     t.index ["option_type_id"], name: "index_options_on_option_type_id"
   end
 
+  create_table "options_product_types", id: false, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "product_type_id"
+    t.integer "option_id"
+    t.index ["product_type_id", "option_id"], name: "index_options_product_types_on_product_type_id_and_option_id"
+  end
+
+  create_table "product_types", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "products", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "product_type_id"
+    t.index ["product_type_id"], name: "index_products_on_product_type_id"
   end
 
   create_table "values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
