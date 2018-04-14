@@ -8,7 +8,7 @@ class Value < ApplicationRecord
   def get_value
     if(option && option.option_type) #Overkill?
       case option.option_type.name
-      when "varchar"
+      when VARCHAR
         varchar_value ? varchar_value.value : nil
       when INTEGER
         integer_value ? integer_value.value : nil
