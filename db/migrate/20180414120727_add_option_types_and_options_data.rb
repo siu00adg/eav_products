@@ -14,36 +14,13 @@ class AddOptionTypesAndOptionsData < ActiveRecord::Migration[5.1]
         Option.create(:name => 'size', :option_type => option_type)
       end
       dir.down do
-        if OptionType.find_by_name('varchar')
-          OptionType.find_by_name('varchar').delete
+        option_types = ["varchar","integer","decimal","datetime","multiselect"]
+        options = ["description","position","price","expiry","size"]
+        option_types.each do |ot|
+          OptionType.find_by_name(ot).delete if OptionType.find_by_name(ot)
         end
-
-        if OptionType.find_by_name('integer')
-          OptionType.find_by_name('integer').delete
-        end
-        if OptionType.find_by_name('decimal')
-          OptionType.find_by_name('decimal').delete
-        end
-        if OptionType.find_by_name('datetime')
-          OptionType.find_by_name('datetime').delete
-        end
-        if OptionType.find_by_name('multiselect')
-          OptionType.find_by_name('multiselect').delete
-        end
-        if Option.find_by_name('description')
-          Option.find_by_name('description').delete
-        end
-        if Option.find_by_name('position')
-          Option.find_by_name('position').delete
-        end
-        if Option.find_by_name('price')
-          Option.find_by_name('price').delete
-        end
-        if Option.find_by_name('expiry')
-          Option.find_by_name('expiry').delete
-        end
-        if Option.find_by_name('size')
-          Option.find_by_name('size').delete
+        options.each do |o|
+          Option.find_by_name(o).delete if Option.find_by_name(o)
         end
       end
     end
