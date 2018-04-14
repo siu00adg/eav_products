@@ -57,7 +57,7 @@ ActiveRecord::Schema.define(version: 20180414170848) do
 
   create_table "varchar_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "option_id"
-    t.string "value"
+    t.string "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["option_id"], name: "index_varchar_values_on_option_id"
