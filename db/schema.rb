@@ -12,6 +12,18 @@
 
 ActiveRecord::Schema.define(version: 20180414170848) do
 
+  create_table "decimal_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.decimal "data", precision: 15, scale: 4
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "integer_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "option_types", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.string "name"
     t.datetime "created_at", null: false
@@ -49,18 +61,17 @@ ActiveRecord::Schema.define(version: 20180414170848) do
   create_table "values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "option_id"
     t.integer "product_id"
-    t.integer "type_value_id"
+    t.integer "valuable_id"
+    t.string "valuable_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["option_id", "product_id", "type_value_id"], name: "index_values_on_option_id_and_product_id_and_type_value_id"
+    t.index ["option_id", "product_id", "valuable_id"], name: "index_values_on_option_id_and_product_id_and_valuable_id"
   end
 
   create_table "varchar_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
-    t.integer "option_id"
     t.string "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["option_id"], name: "index_varchar_values_on_option_id"
   end
 
 end
