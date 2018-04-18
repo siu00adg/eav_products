@@ -2,23 +2,36 @@ class Product < ApplicationRecord
   has_many :values, :dependent => :destroy
   belongs_to :product_type
 
-  @@data = {}
-
-def test
-  load_all_data
-  @@data
+def initialize()
+  @data = {}
 end
 
-# Need to limit getting and setting data based on options on the product_type
+def self.option_filter(filter_hash = {})
+# THIS IS A TEST (Select products that have a description like 'abcd' OR a position of 11)
+  joins(:values).joins("LEFT JOIN `varchar_values` ON `values`.`valuable_id` = `varchar_values`.`id`")
+  .joins("LEFT JOIN `integer_values` ON `values`.`valuable_id` = `integer_values`.`id`")
+  .where(" (`values`.`option_id` = 1 AND `varchar_values`.`data` LIKE '%abcd%') OR (`values`.`option_id` = 2 AND `integer_values`.`data` = 11)")
+end
+
+def load_all_data
+  option_types = OptionType.all
+  option_types.each do |type|
+    # hack while not all type models exist
+    if type.name == 'varchar' || type.name == 'integer' || type.name == 'decimal'
+      load_data_by_type(type)
+    end
+  end
+end
 
 def get_data_by_name(option_name)
-  if @@data[option_name]
-    @@data[option_name]
+  if @data && @data[option_name]
+    @data[option_name]
   else
     option = Option.find_by_name(option_name)
     if option
-      @@data[option_name] = get_data(option)
-      @@data[option_name]
+      @data = {} if !@data
+      @data[option_name] = get_data(option)
+      @data[option_name]
     else
       nil
     end
@@ -58,7 +71,7 @@ end
 
 def destroy_data(option)
   value = option.values.where(:product => self).first
-  value.destroy if value # NEED TO CHECK FOR ORPHANS
+  value.destroy if value # NEED TO CHECK FOR ORPHANS?
 end
 
 private
@@ -66,44 +79,24 @@ private
     option.product_types.where(:id => self.product_type.id).count > 0
   end
 
-  def load_all_data
-    option_types = OptionType.all
-    option_types.each do |type|
-      # hack while not all type models exist
-      if type.name == 'varchar' || type.name == 'integer' || type.name == 'decimal'
-        load_data_by_type(type)
-      end
-    end
-  end
-
   def load_data_by_type(type)
     sql_array = ["
-    SELECT `options`.`name`, `data` \
-    FROM `products` \
-    INNER JOIN `values` ON `values`.`product_id` = \
-               `products`.`id` && `valuable_type` = '%s' \
-    INNER JOIN `%s` ON `values`.`valuable_id` = \
-               `%s`.`id` \
-    INNER JOIN `product_types` ON `products`.`product_type_id` = \
-               `product_types`.`id` \
-    INNER JOIN `options_product_types` ON `product_types`.`id` = \
-               `options_product_types`.`product_type_id` \
-    INNER JOIN `options` ON `options_product_types`.`option_id` = \
-               `options`.`id` \
-    INNER JOIN `option_types` ON `options`.`option_type_id` = \
-               `option_types`.`id` && `option_types`.`name` = '%s' \
-    WHERE `products`.`id` = %s
-    ",
-    "#{type.name.capitalize}Value",
+    SELECT `options`.`name`, `data` FROM `values` \
+    INNER JOIN `%s` ON `values`.`valuable_id` = `%s`.`id` \
+    INNER JOIN `options` ON `values`.`option_id` = `options`.`id` \
+    WHERE `values`.`product_id` = %s && `values`.`valuable_type` = '%s'",
     "#{type.name}_values",
     "#{type.name}_values",
-    type.name,
-    self.id]
+    self.id,
+    "#{type.name.capitalize}Value"]
 
     sql = ActiveRecord::Base.send(:sanitize_sql_array, sql_array)
     results = ActiveRecord::Base.connection.exec_query(sql)
+
+    @data = {} if !@data
+
     results.each do |row|
-      @@data[row["name"]] = row["data"]
+      @data[row["name"]] = row["data"]
     end
   end
 
