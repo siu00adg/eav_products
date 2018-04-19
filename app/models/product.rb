@@ -2,15 +2,49 @@ class Product < ApplicationRecord
   has_many :values, :dependent => :destroy
   belongs_to :product_type
 
-def initialize()
-  @data = {}
-end
+def self.filter(filter_hash = {})
 
-def self.option_filter(filter_hash = {})
+  where_string = ""
+  where_array = []
+
+  filter_hash.each_with_index do |(key, value), index|
+    option = Option.find_by_name(key.to_s)
+    if option
+      if(option.data_table == 'varchar_values') #hack for now...
+        operator = "LIKE"
+      else
+        operator = "="
+      end
+      where_string << "(`values`.`option_id` = %s AND `%s`.`data` #{operator} '%s')"
+      if index != filter_hash.size - 1
+        where_string << " AND "
+      end
+      where_array.push(option.id)
+      where_array.push(option.data_table)
+      if operator == "LIKE" #another hack for now...
+        where_array.push("%#{value}%")
+      else
+        where_array.push(value)
+      end
+    end
+  end
+  where_array.unshift(where_string)
+
+ #   where_string
+ # where_array
+  if where_string.empty?
+    where_string = "1=1"
+  end
+
 # THIS IS A TEST (Select products that have a description like 'abcd' OR a position of 11)
-  joins(:values).joins("LEFT JOIN `varchar_values` ON `values`.`valuable_id` = `varchar_values`.`id`")
+# where_string = " (`values`.`option_id` = 1 AND `varchar_values`.`data` LIKE '%abcd%') OR (`values`.`option_id` = 2 AND `integer_values`.`data` = 11)"
+# where_array = [" (`values`.`option_id` = %s AND `varchar_values`.`data` LIKE '%s') OR (`values`.`option_id` = %s AND `integer_values`.`data` = %s)",
+# 1, '%abcd%', 2, 11]
+  joins(:values)
+  .joins("LEFT JOIN `varchar_values` ON `values`.`valuable_id` = `varchar_values`.`id`")
   .joins("LEFT JOIN `integer_values` ON `values`.`valuable_id` = `integer_values`.`id`")
-  .where(" (`values`.`option_id` = 1 AND `varchar_values`.`data` LIKE '%abcd%') OR (`values`.`option_id` = 2 AND `integer_values`.`data` = 11)")
+  .joins("LEFT JOIN `decimal_values` ON `values`.`valuable_id` = `decimal_values`.`id`")
+  .where(where_array)
 end
 
 def load_all_data
