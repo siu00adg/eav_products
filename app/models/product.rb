@@ -8,6 +8,14 @@ class Product < ApplicationRecord
     #need to work out how to sort by an option
   end
 
+  # Strangely it can be quicker to chain filters together rather than add all
+  # options to the filter hash at once. This is not always the case, if you
+  # are expecting a very large number of results then chaining can be slower.
+  # Best performace seems to be when you arrange the filters in order of number
+  # records eliminated first and eliminate a lot of records.
+  # Further benefits come when you use chained filters and then modify
+  # one of the filters as all filters to the left of the one that was changed
+  # will be cached in mysql.
   def self.filter(filter_hash = {})
     start = Time.now
     if !filter_hash.empty?
