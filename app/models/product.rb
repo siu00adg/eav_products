@@ -105,9 +105,10 @@ class Product < ApplicationRecord
         #{where_sql}
       SQL
       results_array = self.find_by_sql(query)
-      self.where(id: results_array.map(&:id))
+      result = self.where(id: results_array.map(&:id))
+      logger.info("Filter results: #{results_array.count} record(s)")
       logger.info("Filter time taken: #{Time.now - start} seconds")
-      self
+      result
     else
       nil
     end
