@@ -5,6 +5,7 @@ class Product < ApplicationRecord
   OPERATORS = {:equal => "=", :like => "LIKE", :gt => ">", :lt => "<"}
 
   def self.filter(filter_hash = {})
+    start = Time.now
     if !filter_hash.empty?
       filter_array = []
       types_array = []
@@ -101,6 +102,8 @@ class Product < ApplicationRecord
       SQL
       results_array = self.find_by_sql(query)
       self.where(id: results_array.map(&:id))
+      logger.info("Filter time taken: #{Time.now - start} seconds")
+      self
     else
       nil
     end
