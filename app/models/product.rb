@@ -82,6 +82,8 @@ class Product < ApplicationRecord
         where_sql << "AND " if index != filter_array.size - 1
       end
 
+      # Possible future optimisation:
+      # Adding "AND `values`.`option_id` = X" to <type>_values joins
       query = <<-SQL
       SELECT *
         FROM   (SELECT `p2`.`id`,
