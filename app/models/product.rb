@@ -113,24 +113,14 @@ class Product < ApplicationRecord
     end
   end
 
-  def load_all_data
-    option_types = OptionType.all
-    option_types.each do |type|
-      # hack while not all type models exist
-      if type.name == 'varchar' || type.name == 'integer' || type.name == 'decimal'
-        load_data_by_type(type)
-      end
-    end
-  end
-
-  def get_data_by_name(option_name)
+  def get_option(option_name)
     if @data && @data[option_name]
       @data[option_name]
     else
-      option = Option.find_by_name(option_name)
+      option = Option.find_by_name(option_name.to_s)
       if option
         @data = {} if !@data
-        @data[option_name] = get_data(option)
+        @data[option_name] = get_option_data(option)
         @data[option_name]
       else
         nil
@@ -138,43 +128,56 @@ class Product < ApplicationRecord
     end
   end
 
-  def get_data(option)
-    if option_used?(option)
-      value = option.values.where(:product => self).first
-      value ? value.get_data : nil
-    else
-      nil
-    end
-  end
-
-  def set_data_by_name(option_name, data)
+  def set_option(option_name, data)
     option = Option.find_by_name(option_name)
-    option ? set_data(option, data) : nil
-  end
-
-  def set_data(option, data)
-    if option_used?(option)
-      value = Value.where(:option => option, :product => self).first
-      if !value
-        value = Value.create(:option => option, :product => self)
-      end
-      value.set_data(data)
-    else
-      nil
+    if option
+      #probably need to check the type is correct.
+      @data = {} if !@data
+      @data[option_name] = data
     end
+    option ? set_option_data(option, data) : nil
   end
 
-  def destroy_data_by_name(option_name)
-    option = Option.find_by_name(option_name)
-    option ? destroy_data(option) : nil
-  end
-
-  def destroy_data(option)
-    value = option.values.where(:product => self).first
-    value.destroy if value # NEED TO CHECK FOR ORPHANS?
+  def option(option_name, data = nil)
+    if data
+      set_option(option_name, data)
+    else
+      get_option(option_name)
+    end
   end
 
   private
+    def load_all_data
+      option_types = OptionType.all
+      option_types.each do |type|
+        # hack while not all type models exist
+        if type.name == 'varchar' || type.name == 'integer' || type.name == 'decimal'
+          load_data_by_type(type)
+        end
+      end
+    end
+
+    def get_option_data(option)
+      if option_used?(option)
+        value = option.values.where(:product => self).first
+        value ? value.get_data : nil
+      else
+        nil
+      end
+    end
+
+    def set_option_data(option, data)
+      if option_used?(option)
+        value = Value.where(:option => option, :product => self).first
+        if !value
+          value = Value.create(:option => option, :product => self)
+        end
+        value.set_data(data)
+      else
+        nil
+      end
+    end
+
     def option_used?(option)
       option.product_types.where(:id => self.product_type.id).count > 0
     end
