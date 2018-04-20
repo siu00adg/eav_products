@@ -6,13 +6,20 @@ class Product < ApplicationRecord
 
 def self.filter(filter_hash = {})
   if !filter_hash.empty?
-    # filter_hash = {:description => {:like => "MK3"}, :position => {:equal => 1}}
     filter_array = []
     types_array = []
 
     filter_hash.each do |key, value|
       option = Option.find_by_name(key.to_s)
+      if !option
+        # Option doesn't exist so return nil
+        return nil
+      end
       if value.is_a?(Hash)
+        if !OPERATORS[value.keys.first]
+          # Operator doesn't exist so return nil
+          return nil
+        end
         filter_array << [option, OPERATORS[value.keys.first], value.values.first]
       else
         filter_array << [option, OPERATORS[:equal], value]
