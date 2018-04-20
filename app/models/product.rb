@@ -4,6 +4,10 @@ class Product < ApplicationRecord
 
   OPERATORS = {:equal => "=", :like => "LIKE", :gt => ">", :lt => "<"}
 
+  def self.sort
+    #need to work out how to sort by an option
+  end
+
   def self.filter(filter_hash = {})
     start = Time.now
     if !filter_hash.empty?
