@@ -2,49 +2,101 @@ class Product < ApplicationRecord
   has_many :values, :dependent => :destroy
   belongs_to :product_type
 
+  OPERATORS = {:equal => "=", :like => "LIKE", :gt => ">", :lt => "<"}
+
 def self.filter(filter_hash = {})
+  if !filter_hash.empty?
+    # filter_hash = {:description => {:like => "MK3"}, :position => {:equal => 1}}
+    filter_array = []
+    types_array = []
 
-  where_string = ""
-  where_array = []
-
-  filter_hash.each_with_index do |(key, value), index|
-    option = Option.find_by_name(key.to_s)
-    if option
-      if(option.data_table == 'varchar_values') #hack for now...
-        operator = "LIKE"
+    filter_hash.each do |key, value|
+      option = Option.find_by_name(key.to_s)
+      if value.is_a?(Hash)
+        filter_array << [option, OPERATORS[value.keys.first], value.values.first]
       else
-        operator = "="
+        filter_array << [option, OPERATORS[:equal], value]
       end
-      where_string << "(`values`.`option_id` = %s AND `%s`.`data` #{operator} '%s')"
-      if index != filter_hash.size - 1
-        where_string << " AND "
-      end
-      where_array.push(option.id)
-      where_array.push(option.data_table)
-      if operator == "LIKE" #another hack for now...
-        where_array.push("%#{value}%")
-      else
-        where_array.push(value)
-      end
+      types_array << option.option_type.name
     end
-  end
-  where_array.unshift(where_string)
 
- #   where_string
- # where_array
-  if where_string.empty?
-    where_string = "1=1"
-  end
+    types_array = types_array.uniq
 
-# THIS IS A TEST (Select products that have a description like 'abcd' OR a position of 11)
-# where_string = " (`values`.`option_id` = 1 AND `varchar_values`.`data` LIKE '%abcd%') OR (`values`.`option_id` = 2 AND `integer_values`.`data` = 11)"
-# where_array = [" (`values`.`option_id` = %s AND `varchar_values`.`data` LIKE '%s') OR (`values`.`option_id` = %s AND `integer_values`.`data` = %s)",
-# 1, '%abcd%', 2, 11]
-  joins(:values)
-  .joins("LEFT JOIN `varchar_values` ON `values`.`valuable_id` = `varchar_values`.`id`")
-  .joins("LEFT JOIN `integer_values` ON `values`.`valuable_id` = `integer_values`.`id`")
-  .joins("LEFT JOIN `decimal_values` ON `values`.`valuable_id` = `decimal_values`.`id`")
-  .where(where_array)
+    type_sql = ""
+    types_array.each_with_index do |type, index|
+      type_sql << "`#{type}_values`.`data` "
+      type_sql << "AS `#{type}_data` "
+      type_sql << ", " if index != types_array.size - 1
+    end
+
+    join_sql = ""
+    types_array.each do |type|
+      join_sql << "LEFT JOIN `#{type}_values` "
+      join_sql << "ON `values`.`valuable_id` = `#{type}_values`.`id` "
+      join_sql << "AND `values`.`valuable_type` = '#{type.capitalize}Value' "
+    end
+
+    where_option_sql = "WHERE `values`.`option_id` IN ("
+    filter_array.each_with_index do |filter, index|
+      where_option_sql << "#{filter[0].id}"
+      where_option_sql << "," if index != filter_array.size - 1
+    end
+    where_option_sql << ")"
+
+    case_sql = ""
+    filter_array.each_with_index do |filter, index|
+      case_sql << "CASE WHEN `p`.`option_id` = #{filter[0].id} "
+      case_sql << "THEN `p`.`#{filter[0].option_type.name}_data` "
+      case_sql << "END AS `#{filter[0].name}` "
+      case_sql << ", " if index != filter_array.size - 1
+    end
+
+    max_sql = ""
+    filter_array.each_with_index do |filter, index|
+      max_sql << "MAX(IFNULL(`p2`.`#{filter[0].name}`,0)) "
+      max_sql << "AS `#{filter[0].name}` "
+      max_sql << ", " if index != filter_array.size - 1
+    end
+
+    # This is for filtering by an attribute on the product record
+    # e.g. where_product_attribute_sql = "WHERE `name` LIKE '%something%'"
+    where_product_attribute_sql = ""
+
+    where_sql = "WHERE "
+    filter_array.each_with_index do |filter, index|
+      where_value = filter[2]
+      where_value = "%" + where_value + "%" if filter[1] == "LIKE"
+      where_sql << "(`#{filter[0].name}` #{filter[1]} '#{where_value}') "
+      where_sql << "AND " if index != filter_array.size - 1
+    end
+
+    query = <<-SQL
+    SELECT *
+      FROM   (SELECT `p2`.`id`,
+                    `p2`.`name`,
+                    #{max_sql}
+             FROM   (SELECT `p`.`id`,
+                            `p`.`name`,
+                            `p`.`option_id`,
+                            #{case_sql}
+                     FROM   (SELECT *
+                             FROM   (#{existing_scope_sql}) AS `existing_scope`
+                                    JOIN (SELECT `values`.`product_id`,
+                                                 `values`.`option_id`,
+                                                 #{type_sql}
+                                          FROM   `values`
+                                                 #{join_sql}
+                                          #{where_option_sql}) AS `v`
+                                      ON `v`.`product_id` = `existing_scope`.`id`
+                             #{where_product_attribute_sql}) AS `p`) AS `p2`
+             GROUP  BY `p2`.`id`) AS `p3`
+      #{where_sql}
+    SQL
+    results_array = self.find_by_sql(query)
+    self.where(id: results_array.map(&:id))
+  else
+    nil
+  end
 end
 
 def load_all_data
@@ -132,6 +184,10 @@ private
     results.each do |row|
       @data[row["name"]] = row["data"]
     end
+  end
+
+  def self.existing_scope_sql
+      self.connection.unprepared_statement {self.reorder(nil).select("id, name").to_sql}
   end
 
 end
