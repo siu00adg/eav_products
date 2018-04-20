@@ -157,6 +157,16 @@ class Product < ApplicationRecord
     end
   end
 
+  def destroy_data_by_name(option_name)
+    option = Option.find_by_name(option_name)
+    option ? destroy_data(option) : nil
+  end
+
+  def destroy_data(option)
+    value = option.values.where(:product => self).first
+    value.destroy if value # NEED TO CHECK FOR ORPHANS?
+  end
+
   private
     def load_all_data
       option_types = OptionType.all

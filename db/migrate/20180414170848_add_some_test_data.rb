@@ -84,10 +84,10 @@ class AddSomeTestData < ActiveRecord::Migration[5.1]
         products.each do |p|
           product_type = ProductType.find_or_create_by(name: p[:product_type])
           product = Product.create(:name => p[:name], :product_type => product_type)
-          product.set_data_by_name("description", p[:description])
-          product.set_data_by_name("position", p[:position])
-          product.set_data_by_name("price", p[:price])
-          product.set_data_by_name("live", p[:live])
+          product.option(:description, p[:description])
+          product.option(:position, p[:position])
+          product.option(:price, p[:price])
+          product.option(:live, p[:live])
         end
       end
       dir.down do
