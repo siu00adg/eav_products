@@ -124,7 +124,7 @@ class Product < ApplicationRecord
         sort_sql << "ORDER BY "
         sort_array.each_with_index do |sort, index|
           sort_sql << "`#{sort[0].name}` #{sort[1]} "
-          sort_sql << ", " if index != filter_array.size - 1
+          sort_sql << ", " if index != sort_array.size - 1
         end
       end
 
