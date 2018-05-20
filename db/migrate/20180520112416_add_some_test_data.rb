@@ -93,7 +93,7 @@ class AddSomeTestData < ActiveRecord::Migration[5.1]
         # Random products
         product_types.each do |pt|
           product_type = ProductType.find_or_create_by(name: pt[:name])
-          for i in 1..5000
+          for i in 1..10
             random_string = (0...25).map { ('a'..'z').to_a[rand(26)] }.join
             random_decimal = (500.0 - 5.0) * rand() + 5
             random_integer = Random.rand(1...10)

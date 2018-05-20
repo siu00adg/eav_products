@@ -5,7 +5,7 @@ class ApplicationRecord < ActiveRecord::Base
   INTEGER = "integer"
   DECIMAL = "decimal"
   DATETIME = "datetime"
-  MULTISELECT = "multiselect"
+  MULTISELECT_VARCHAR = "multiselect_varchar"
 
   self.abstract_class = true
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180520112416) do
+ActiveRecord::Schema.define(version: 20180520161037) do
 
   create_table "datetime_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.datetime "data"
@@ -26,6 +26,20 @@ ActiveRecord::Schema.define(version: 20180520112416) do
 
   create_table "integer_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer "data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "multiselect_varchar_options", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "option_id"
+    t.string "data"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["option_id"], name: "index_multiselect_varchar_options_on_option_id"
+  end
+
+  create_table "multiselect_varchar_values", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer "multiselect_varchar_option_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

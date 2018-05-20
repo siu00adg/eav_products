@@ -208,7 +208,7 @@ class Product < ApplicationRecord
 
   def destroy_data(option)
     value = option.values.where(:product => self).first
-    value.destroy if value # NEED TO CHECK FOR ORPHANS?
+    value.destroy if value
   end
 
   private

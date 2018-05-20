@@ -1,7 +1,7 @@
 class AddOptionTypesAndOptionsData < ActiveRecord::Migration[5.1]
   def change
     reversible do |dir|
-      option_types = ["varchar","integer","decimal","datetime","multiselect"]
+      option_types = ["varchar","integer","decimal","datetime","multiselect_varchar"]
       dir.up do
         option_types.each do |ot|
           OptionType.create(:name => ot)
