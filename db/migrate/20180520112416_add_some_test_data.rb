@@ -89,6 +89,22 @@ class AddSomeTestData < ActiveRecord::Migration[5.1]
           product.option(:price, p[:price])
           product.option(:live, p[:live])
         end
+
+        # Random products
+        product_types.each do |pt|
+          product_type = ProductType.find_or_create_by(name: pt[:name])
+          for i in 1..5000
+            random_string = (0...25).map { ('a'..'z').to_a[rand(26)] }.join
+            random_decimal = (500.0 - 5.0) * rand() + 5
+            random_integer = Random.rand(1...10)
+            product = Product.create(:name => "Test Product Name " + random_string, :product_type => product_type)
+            product.option(:description, "Test Product Description " + random_string)
+            product.option(:position, random_integer)
+            product.option(:price, random_decimal)
+            product.option(:live, Time.now)
+          end
+        end
+
       end
       dir.down do
         products.each do |p|
@@ -100,6 +116,14 @@ class AddSomeTestData < ActiveRecord::Migration[5.1]
             product.destroy_data_by_name("live")
             product.destroy
           end
+        end
+
+        Product.where(["name LIKE ?", "%Test Product Name%"]).each do |product|
+          product.destroy_data_by_name("description")
+          product.destroy_data_by_name("position")
+          product.destroy_data_by_name("price")
+          product.destroy_data_by_name("live")
+          product.destroy
         end
 
         Option.find_by_name("description").destroy if Option.find_by_name("description")

@@ -235,9 +235,10 @@ class Product < ApplicationRecord
       if option_used?(option)
         value = Value.where(:option => option, :product => self).first
         if !value
-          value = Value.create(:option => option, :product => self)
+          value = Value.new(:option => option, :product => self)
         end
         value.set_data(data)
+        value.save
       else
         nil
       end
